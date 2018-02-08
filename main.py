@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import pprint
+import logging
 
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
@@ -32,6 +33,9 @@ pp = pprint.PrettyPrinter()
 if not os.path.exists("logs"):
     os.mkdir("logs")
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 
 def show_all_variables():
     model_vars = tf.trainable_variables()
@@ -39,6 +43,9 @@ def show_all_variables():
 
 
 def load_sp500(input_size, num_steps, k=None, target_symbol=None, test_ratio=0.05):
+    print('target_symbol = ', target_symbol)
+    logger.info('test 3')
+    logger.info('target_symbol = {}'.format(target_symbol))
     if target_symbol is not None:
         return [
             StockDataSet(
@@ -50,9 +57,10 @@ def load_sp500(input_size, num_steps, k=None, target_symbol=None, test_ratio=0.0
 
     # Load metadata of s & p 500 stocks
     info = pd.read_csv("data/constituents-financials.csv")
+    print(info.head())
     info = info.rename(columns={col: col.lower().replace(' ', '_') for col in info.columns})
     info['file_exists'] = info['symbol'].map(lambda x: os.path.exists("data/{}.csv".format(x)))
-    print info['file_exists'].value_counts().to_dict()
+    print(info['file_exists'].value_counts().to_dict())
 
     info = info[info['file_exists'] == True].reset_index(drop=True)
     info = info.sort('market_cap', ascending=False).reset_index(drop=True)
@@ -60,7 +68,7 @@ def load_sp500(input_size, num_steps, k=None, target_symbol=None, test_ratio=0.0
     if k is not None:
         info = info.head(k)
 
-    print "Head of S&P 500 info:\n", info.head()
+    print("Head of S&P 500 info:\n", info.head())
 
     # Generate embedding meta file
     info[['symbol', 'sector']].to_csv(os.path.join("logs/metadata.tsv"), sep='\t', index=False)
@@ -73,7 +81,34 @@ def load_sp500(input_size, num_steps, k=None, target_symbol=None, test_ratio=0.0
         for _, row in info.iterrows()]
 
 
+def setup_log_file():
+    import logging.config
+    import datetime
+    from os import path
+
+    now = datetime.datetime.now()
+
+    log_file_path = 'logs/logging.{}{}{}'.format(now.year, now.month, now.day)
+    log_file_full_path = path.join(path.dirname(path.abspath(__file__)), log_file_path)
+    logger_handler = logging.FileHandler(log_file_full_path)
+    logger_handler.setLevel(logging.INFO)
+
+    # Create a Formatter for formatting the log messages
+    logger_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+
+    # Add the Formatter to the Handler
+    logger_handler.setFormatter(logger_formatter)
+
+    # Add the Handler to the Logger
+    logger.addHandler(logger_handler)
+    logger.info('Completed configuring logger()!')
+    logger.info('test 1')
+
+
 def main(_):
+    setup_log_file()
+    logger.info('test 2')
+
     pp.pprint(flags.FLAGS.__flags)
 
     # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.333)
