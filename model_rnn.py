@@ -7,11 +7,15 @@ import random
 import re
 import shutil
 import time
+import logging
 import tensorflow as tf
 
 import matplotlib.pyplot as plt
 
 from tensorflow.contrib.tensorboard.plugins import projector
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class LstmRNN(object):
@@ -52,6 +56,7 @@ class LstmRNN(object):
         self.plots_dir = plots_dir
 
         self.build_graph()
+        logging.info('Doing something')
 
     def build_graph(self):
         """

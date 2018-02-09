@@ -43,8 +43,6 @@ def show_all_variables():
 
 
 def load_sp500(input_size, num_steps, k=None, target_symbol=None, test_ratio=0.05):
-    print('target_symbol = ', target_symbol)
-    logger.info('test 3')
     logger.info('target_symbol = {}'.format(target_symbol))
     if target_symbol is not None:
         return [
@@ -90,24 +88,25 @@ def setup_log_file():
 
     log_file_path = 'logs/logging.{}{}{}'.format(now.year, now.month, now.day)
     log_file_full_path = path.join(path.dirname(path.abspath(__file__)), log_file_path)
-    logger_handler = logging.FileHandler(log_file_full_path)
-    logger_handler.setLevel(logging.INFO)
+    logging.basicConfig(filename=log_file_full_path,
+                        format='%(asctime)s %(module)s %(levelname)s %(message)s',
+                        level=logging.INFO)
 
-    # Create a Formatter for formatting the log messages
-    logger_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-
-    # Add the Formatter to the Handler
-    logger_handler.setFormatter(logger_formatter)
-
-    # Add the Handler to the Logger
-    logger.addHandler(logger_handler)
-    logger.info('Completed configuring logger()!')
-    logger.info('test 1')
+    # # Create a Formatter for formatting the log messages
+    # logger_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    #
+    # # Add the Formatter to the Handler
+    # logger_handler.setFormatter(logger_formatter)
+    #
+    # # Add the Handler to the Logger
+    # logger.addHandler(logger_handler)
+    logging.info('Completed configuring logger()!')
 
 
 def main(_):
+
     setup_log_file()
-    logger.info('test 2')
+    logging.info('Started')
 
     pp.pprint(flags.FLAGS.__flags)
 
