@@ -89,7 +89,7 @@ def setup_log_file():
     log_file_path = 'logs/logging.{}{}{}'.format(now.year, now.month, now.day)
     log_file_full_path = path.join(path.dirname(path.abspath(__file__)), log_file_path)
     logging.basicConfig(filename=log_file_full_path,
-                        format='%(asctime)s %(module)s %(levelname)s %(message)s',
+                        format='%(asctime)s %(module)s %(lineno)d %(levelname)s %(message)s',
                         level=logging.INFO)
 
     # # Create a Formatter for formatting the log messages

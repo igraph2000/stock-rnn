@@ -14,9 +14,6 @@ import matplotlib.pyplot as plt
 
 from tensorflow.contrib.tensorboard.plugins import projector
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
 
 class LstmRNN(object):
     def __init__(self, sess, stock_count,
@@ -177,20 +174,21 @@ class LstmRNN(object):
         merged_test_labels = []
 
         for label_, d_ in enumerate(dataset_list):
-            print('For each data')
-            print(label_)
-            print(d_)
+            logging.info(
+                'For each data label_ = {}, d_ = {}'.format(label_, d_))
             merged_test_X += list(d_.test_X)
             merged_test_y += list(d_.test_y)
             merged_test_labels += [[label_]] * len(d_.test_X)
+            logging.info('len(d_.test_X) = {}'.format(len(d_.test_X)))
 
         merged_test_X = np.array(merged_test_X)
         merged_test_y = np.array(merged_test_y)
         merged_test_labels = np.array(merged_test_labels)
 
-        print("len(merged_test_X) =", len(merged_test_X))
-        print("len(merged_test_y) =", len(merged_test_y))
-        print("len(merged_test_labels) =", len(merged_test_labels))
+        logging.info("merged_test_X.shape = {}".format(merged_test_X.shape))
+        logging.info("merged_test_y.shape = {}".format(merged_test_y.shape))
+        logging.info(
+            "merged_test_labels.shape = {}".format(merged_test_labels.shape))
 
         test_data_feed = {
             self.learning_rate: 0.0,

@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import random
 import time
+import logging
 
 random.seed(time.time())
 
@@ -42,6 +43,8 @@ class StockDataSet(object):
         # split into items of input_size
         seq = [np.array(seq[i * self.input_size: (i + 1) * self.input_size])
                for i in range(len(seq) // self.input_size)]
+        # seq = num_days * [price]
+        logging.info('len(seq) = {}, seq[0].shape = {}'.format(len(seq), seq[0].shape))
 
         if self.normalized:
             seq = [seq[0] / seq[0][0] - 1.0] + [
@@ -54,6 +57,9 @@ class StockDataSet(object):
         train_size = int(len(X) * (1.0 - self.test_ratio))
         train_X, test_X = X[:train_size], X[train_size:]
         train_y, test_y = y[:train_size], y[train_size:]
+        # train_X = num_days * num_steps (30) * input_size (1)
+        # train_y = num_days * input_size (1)
+
         return train_X, train_y, test_X, test_y
 
     def generate_one_epoch(self, batch_size):
