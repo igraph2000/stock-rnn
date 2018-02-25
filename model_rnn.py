@@ -11,6 +11,7 @@ import logging
 import tensorflow as tf
 
 import matplotlib.pyplot as plt
+from back_test import calculate_performance
 
 from tensorflow.contrib.tensorboard.plugins import projector
 
@@ -102,8 +103,10 @@ class LstmRNN(object):
             self.inputs_with_embed = tf.identity(self.inputs)
             self.embed_matrix_summ = None
 
-        print("inputs.shape:", self.inputs.shape)
-        print("inputs_with_embed.shape:", self.inputs_with_embed.shape)
+        logging.info("inputs.shape: {}".format(self.inputs.shape))
+        logging.info(
+            "inputs_with_embed.shape: {}".format(self.inputs_with_embed.shape)
+            )
 
         # Run dynamic RNN
         val, state_ = tf.nn.dynamic_rnn(cell, self.inputs_with_embed, dtype=tf.float32, scope="dynamic_rnn")
@@ -187,8 +190,9 @@ class LstmRNN(object):
 
         logging.info("merged_test_X.shape = {}".format(merged_test_X.shape))
         logging.info("merged_test_y.shape = {}".format(merged_test_y.shape))
-        logging.info(
-            "merged_test_labels.shape = {}".format(merged_test_labels.shape))
+        # logging.info(
+        #     "merged_test_labels.shape = {} {}".format(
+        #         merged_test_labels.shape, merged_test_labels))
 
         test_data_feed = {
             self.learning_rate: 0.0,
@@ -206,19 +210,21 @@ class LstmRNN(object):
         # Select samples for plotting.
         sample_labels = range(min(config.sample_size, len(dataset_list)))
         sample_indices = {}
+        logging.info('sample_labels {}'.format(sample_labels))
         for l in sample_labels:
             sym = dataset_list[l].stock_sym
             target_indices = np.array([
                 i for i, sym_label in enumerate(merged_test_labels)
                 if sym_label[0] == l])
             sample_indices[sym] = target_indices
-        print(sample_indices)
+        # print(sample_indices)
 
         print("Start training for stocks:", [d.stock_sym for d in dataset_list])
         for epoch in range(config.max_epoch):
             epoch_step = 0
             learning_rate = config.init_learning_rate * (
-                config.learning_rate_decay ** max(float(epoch + 1 - config.init_epoch), 0.0)
+                config.learning_rate_decay ** max(
+                    float(epoch + 1 - config.init_epoch), 0.0)
             )
 
             for label_, d_ in enumerate(dataset_list):
@@ -249,6 +255,12 @@ class LstmRNN(object):
                                 sample_sym, epoch, epoch_step))
                             sample_preds = test_pred[indices]
                             sample_truth = merged_test_y[indices]
+
+                            profit, profit_when_hold = calculate_performance(
+                                sample_truth,
+                                sample_preds)
+                            logging.info('profit = {}, profit_when_hold = {}'
+                                         ''.format(profit, profit_when_hold))
                             self.plot_samples(sample_preds, sample_truth, image_path, stock_sym=sample_sym)
 
                         self.save(global_step)
@@ -285,6 +297,7 @@ class LstmRNN(object):
 
     def save(self, step):
         model_name = self.model_name + ".model"
+        logging.info('Saving model {}'.format(model_name))
         self.saver.save(
             self.sess,
             os.path.join(self.model_logs_dir, model_name),

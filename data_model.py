@@ -24,13 +24,16 @@ class StockDataSet(object):
         self.normalized = normalized
 
         # Read csv file
-        raw_df = pd.read_csv(os.path.join("data", "%s.csv" % stock_sym))
+        self.raw_df = pd.read_csv(os.path.join("data", "%s.csv" % stock_sym))
+        logging.info('self.raw_df.shape = {}'.format(self.raw_df.shape))
+        self.raw_df = self.raw_df.iloc[::-1]
+        logging.info('{}'.format(self.raw_df.head()))
 
         # Merge into one sequence
         if close_price_only:
-            self.raw_seq = raw_df['Close'].tolist()
+            self.raw_seq = self.raw_df['Close'].tolist()
         else:
-            self.raw_seq = [price for tup in raw_df[['Open', 'Close']].values for price in tup]
+            self.raw_seq = [price for tup in self.raw_df[['Open', 'Close']].values for price in tup]
 
         self.raw_seq = np.array(self.raw_seq)
         self.train_X, self.train_y, self.test_X, self.test_y = self._prepare_data(self.raw_seq)
@@ -50,15 +53,30 @@ class StockDataSet(object):
             seq = [seq[0] / seq[0][0] - 1.0] + [
                 curr / seq[i][-1] - 1.0 for i, curr in enumerate(seq[1:])]
 
+            # i start from 0!
+            self.max_normalized_px = max(map(max, seq))
+            self.min_normalized_px = min(map(min, seq))
+            logging.info(
+                '{} {}'.format(self.max_normalized_px, self.min_normalized_px))
+
         # split into groups of num_steps
         X = np.array([seq[i: i + self.num_steps] for i in range(len(seq) - self.num_steps)])
         y = np.array([seq[i + self.num_steps] for i in range(len(seq) - self.num_steps)])
+        # 3360
 
         train_size = int(len(X) * (1.0 - self.test_ratio))
         train_X, test_X = X[:train_size], X[train_size:]
         train_y, test_y = y[:train_size], y[train_size:]
         # train_X = num_days * num_steps (30) * input_size (1)
         # train_y = num_days * input_size (1)
+
+        logging.info('train_size = {}'.format(train_size))
+        logging.info('self.raw_df.shape = {}'.format(self.raw_df.shape))
+
+        logging.info('start date {}'.format(
+            self.raw_df.iloc[[train_size - 1 + self.num_steps,
+                              train_size + self.num_steps,
+                              -1]]))
 
         return train_X, train_y, test_X, test_y
 
