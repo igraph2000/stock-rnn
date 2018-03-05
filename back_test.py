@@ -12,9 +12,9 @@ def calculate_performance(target, prediction):
     profit = 1
     profit_when_hold = 1
     for i in range(len(prediction)):
-        if prediction[i] > 0:
-            profit *= (1 + target[i])
-        profit_when_hold *= (1 + target[i])
+        if prediction[i][0] > 0:
+            profit *= (1 + target[i][0])
+        profit_when_hold *= (1 + target[i][0])
         # if i == 1:
         #     break
 

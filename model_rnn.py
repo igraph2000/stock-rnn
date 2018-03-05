@@ -256,9 +256,20 @@ class LstmRNN(object):
                             sample_preds = test_pred[indices]
                             sample_truth = merged_test_y[indices]
 
+                            logging.info("len(sample_preds) = {}".format(
+                                len(sample_preds)))
+                            if len(sample_preds) > 0:
+                                logging.info("len(sample_preds[0]) = {}".format(
+                                    len(sample_preds[0])))
+
+                            denormalized_sample_preds = (
+                                d_.denormalize_px(sample_preds))
+                            denormalized_sample_truth = (
+                                d_.denormalize_px(sample_truth))
+
                             profit, profit_when_hold = calculate_performance(
-                                sample_truth,
-                                sample_preds)
+                                denormalized_sample_truth,
+                                denormalized_sample_preds)
                             logging.info('profit = {}, profit_when_hold = {}'
                                          ''.format(profit, profit_when_hold))
                             self.plot_samples(sample_preds, sample_truth, image_path, stock_sym=sample_sym)

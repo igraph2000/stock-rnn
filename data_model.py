@@ -4,6 +4,7 @@ import pandas as pd
 import random
 import time
 import logging
+from sklearn.preprocessing import MinMaxScaler
 
 random.seed(time.time())
 
@@ -42,6 +43,32 @@ class StockDataSet(object):
         return "StockDataSet [%s] train: %d test: %d" % (
             self.stock_sym, len(self.train_X), len(self.test_y))
 
+    # prices: [number of price window, price window]
+    # return: normalized prices
+    def _normalize_price_to_change_rate(self, prices):
+        prices = [prices[0] / prices[0][0] - 1.0] + [
+            curr / prices[i][-1] - 1.0 for i, curr in enumerate(prices[1:])]
+        prices = np.array(prices)
+        return prices
+
+    def _normalize_price_to_range(self, prices, min = 0.0, max = 1.0):
+        row_num = prices.shape[0]
+        col_num = prices.shape[1]
+        prices.reshape(row_num * col_num, 1)
+        scaler = MinMaxScaler(feature_range=(min, max))
+        self.px_scaler = scaler.fit(prices)
+        print('Min: %f, Max: %f' % (scaler.data_min_, scaler.data_max_))
+        logging.info(
+            '{} {}'.format(scaler.data_min_, scaler.data_max_))
+        # normalize the dataset and print the first 5 rows
+        prices = self.px_scaler.transform(prices)
+        prices.reshape(row_num, col_num)
+        return prices
+
+    def denormalize_px(self, normalized):
+        result = self.px_scaler.inverse_transform(normalized)
+        return result
+
     def _prepare_data(self, seq):
         # split into items of input_size
         seq = [np.array(seq[i * self.input_size: (i + 1) * self.input_size])
@@ -50,14 +77,9 @@ class StockDataSet(object):
         logging.info('len(seq) = {}, seq[0].shape = {}'.format(len(seq), seq[0].shape))
 
         if self.normalized:
-            seq = [seq[0] / seq[0][0] - 1.0] + [
-                curr / seq[i][-1] - 1.0 for i, curr in enumerate(seq[1:])]
+            seq = self._normalize_price_to_change_rate(seq)
+            seq = self._normalize_price_to_range(seq)
 
-            # i start from 0!
-            self.max_normalized_px = max(map(max, seq))
-            self.min_normalized_px = min(map(min, seq))
-            logging.info(
-                '{} {}'.format(self.max_normalized_px, self.min_normalized_px))
 
         # split into groups of num_steps
         X = np.array([seq[i: i + self.num_steps] for i in range(len(seq) - self.num_steps)])
@@ -93,3 +115,5 @@ class StockDataSet(object):
             batch_y = self.train_y[j * batch_size: (j + 1) * batch_size]
             assert set(map(len, batch_X)) == {self.num_steps}
             yield batch_X, batch_y
+
+
