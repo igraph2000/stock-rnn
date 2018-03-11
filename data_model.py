@@ -80,7 +80,6 @@ class StockDataSet(object):
             seq = self._normalize_price_to_change_rate(seq)
             seq = self._normalize_price_to_range(seq)
 
-
         # split into groups of num_steps
         X = np.array([seq[i: i + self.num_steps] for i in range(len(seq) - self.num_steps)])
         y = np.array([seq[i + self.num_steps] for i in range(len(seq) - self.num_steps)])

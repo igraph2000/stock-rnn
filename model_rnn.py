@@ -149,7 +149,8 @@ class LstmRNN(object):
         self.merged_sum = tf.summary.merge_all()
 
         # Set up the logs folder
-        self.writer = tf.summary.FileWriter(os.path.join("./logs", self.model_name))
+        self.writer = tf.summary.FileWriter(os.path.join("./logs",
+                                                         self.model_name))
         self.writer.add_graph(self.sess.graph)
 
         if self.use_embed:
